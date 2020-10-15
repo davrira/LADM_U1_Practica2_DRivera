@@ -3,13 +3,11 @@ package mx.tecnm.ladm_u1_practica2_drivera
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
+import java.io.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,11 +24,17 @@ class MainActivity : AppCompatActivity() {
                     mensaje("Guardado con exito en memoria interna")
                 }else{
                     dialogo("Atencion","Error al guardar en memoria interna","Ok")
-                }
+                }//if-guardarMemoriaInterna
 
             }else{
-                mensaje("Memoria externa selccionada")
-            }
+
+                if (guardarMemoriaSD()){
+                    mensaje("Guardado con exito en memoria SD")
+                }else{
+                    dialogo("Atencion","Error al guardar en memoria SD", "Ok")
+                }//if-guardarSD
+
+            }//if-rbMI
 
         }//btnGuardar
 
@@ -38,14 +42,22 @@ class MainActivity : AppCompatActivity() {
         btnAbrir.setOnClickListener {
 
             if (rbMI.isChecked){
+
                 if(leerMemoriaInterna()){
                     mensaje("Archivo leido desde memoria interna")
                 }else{
                     dialogo("Atencion","Error al leer el archivo o encontrarlo","Ok")
-                }
+                }//if-leerMemoriaInterna
+
             }else{
-                mensaje("Memoria externa seleccionada")
-            }
+
+                if(leerMemoriaSD()){
+                    mensaje("Archivo leido desde memoria SD")
+                }else{
+                    dialogo("Atencion","Error al leer archivo o encontrarlo","Ok")
+                }//if-leerMemoriaSD
+
+            }//if-rbMI
 
         }//btnAbrir
 
@@ -99,6 +111,56 @@ class MainActivity : AppCompatActivity() {
     }//leerMemoriaInterna
 
 
+    private fun guardarMemoriaSD () : Boolean{
+
+        try {
+
+            var nombreArchivoSD = txtNombreArchivo.text.toString()
+            var rutaSD = Environment.getExternalStorageDirectory()
+            var datosArchivo = File(rutaSD.absolutePath, nombreArchivoSD)
+            var flujoSalida = OutputStreamWriter(FileOutputStream(datosArchivo))
+            var datos = EdTeFrase.text.toString()
+
+            flujoSalida.write(datos)
+            flujoSalida.flush()
+            flujoSalida.close()
+
+        }catch (ioE: IOException){
+            return false
+        }
+
+        return true
+    }//guardarMemoriaSD
+
+
+    private fun leerMemoriaSD () : Boolean{
+
+        try {
+
+            var nombreArchivo = txtNombreArchivo.text.toString()
+            var rutaSD = Environment.getExternalStorageDirectory()
+            var datosArchivos = File(rutaSD.absolutePath, nombreArchivo)
+            var flujoEntrada = BufferedReader(InputStreamReader(FileInputStream(datosArchivos)))
+
+            var datos = flujoEntrada.readLine()
+            var todo = StringBuilder()
+
+            while (datos != null){
+                todo.append(datos+"\n")
+                datos = flujoEntrada.readLine()
+            }
+
+            EdTeFrase.setText(todo)
+            flujoEntrada.close()
+
+        }catch (ioE: IOException){
+            return false
+        }
+
+        return true
+    }//leerMemoriaSD
+
+
     fun dialogo(titulo:String, mensaje:String, btnOk:String){
 
         AlertDialog.Builder(this)
@@ -113,5 +175,6 @@ class MainActivity : AppCompatActivity() {
     fun mensaje(mensaje:String){
         Toast.makeText(this,mensaje,Toast.LENGTH_LONG).show()
     }//mensaje
+
 
 }//class
